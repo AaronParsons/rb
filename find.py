@@ -1,5 +1,3 @@
-from __future__ import print_function
-import cv2
 from . import neural
 import tensorflow as tf; tf.logging.set_verbosity(tf.logging.ERROR)
 import numpy as np
