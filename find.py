@@ -1,4 +1,4 @@
-from . import neural
+import neural
 import tensorflow as tf; tf.logging.set_verbosity(tf.logging.ERROR)
 import numpy as np
 
@@ -65,7 +65,7 @@ class FinderCNN:
             x_in: a cube of thumbnails.'''
         x_in = np.array([im[cy-self.half_sz:cy+self.half_sz,cx-self.half_sz:cx+self.half_sz] for cx,cy in centers])
         return x_in.astype(np.float) / 255
-    def find(self, im, xrng=(0,120), yrng=(0,200), step=24):
+    def find(self, im, xrng=None, yrng=None, step=16):
         '''Sample an image and return locations that are matches.
         Arguments:
             im: the image to sample
@@ -74,6 +74,7 @@ class FinderCNN:
             step: the separation in pixels between centers in both the x and y directions.  Default 24.
         Returns:
             centers: centers of locations where a match occured.'''
+        im.shape = im.shape + (1,)
         centers = self.gen_centers(im.shape[:-1], step, xrng=xrng, yrng=yrng)
         x_in = self.get_xin(im, centers)
         has_label = self._run(x_in)
