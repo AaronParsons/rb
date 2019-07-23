@@ -8,7 +8,8 @@ def read_frame(cap, frame_num):
     frame_curr = cv2.cvtColor(cap.read()[1], cv2.COLOR_BGR2GRAY)
     return frame_curr
 
-def create_samples(thumb, bgs, nsamples, bg_level=255, bg_thresh=150, noise=10, dither=3):
+#def create_samples(thumb, bgs, nsamples, bg_level=255, bg_thresh=150, noise=10, dither=3):
+def create_samples(thumb, bgs, nsamples, bg_level=255, bg_thresh=150, noise=0, dither=0):
     width,height = thumb.shape[-2:]
     bgs.shape = (-1,) + bgs.shape[-2:]
     tx, ty = np.where(np.abs(thumb.astype(np.int) - bg_level) > bg_thresh) # where to use thumb
@@ -17,16 +18,25 @@ def create_samples(thumb, bgs, nsamples, bg_level=255, bg_thresh=150, noise=10, 
     ys = np.random.randint(bgs.shape[2]-height, size=nsamples)
     vec = np.array([bgs[w,x:x+width,y:y+height] for w,x,y in zip(ws,xs,ys)])
     for i in range(vec.shape[0]):
-        dx, dy = tx - width / 2., ty - height / 2.
-        theta = np.random.uniform(0,2*np.pi)
-        dx,dy = dx*np.cos(theta) - dy*np.sin(theta), dy*np.cos(theta) + dx*np.sin(theta)
-        dx,dy = dx + width / 2., dy + height / 2
-        dx = dx + np.random.randint(-dither,dither)
-        dy = dy + np.random.randint(-dither,dither)
-        dx = np.around(dx).clip(0,width).astype(np.int)
-        dy = np.around(dy).clip(0,height).astype(np.int)
+        dx, dy = tx.copy(), ty.copy()
+        #dx, dy = tx - width / 2., ty - height / 2.
+        #theta = np.random.uniform(0,2*np.pi)
+        #dx,dy = dx*np.cos(theta) - dy*np.sin(theta), dy*np.cos(theta) + dx*np.sin(theta)
+        #dx,dy = dx + width / 2., dy + height / 2
+        #dx = dx + np.random.randint(-dither,dither)
+        #dy = dy + np.random.randint(-dither,dither)
+        #if np.random.randint(2): # 90-deg rotation
+        #    dx, dy = dy, dx
+        #if np.random.randint(2): # flip lr
+        #    dx = width - 1 - dx
+        #if np.random.randint(2): # flip ud
+        #    dy = height - 1 - dy
+        #dx = np.around(dx).clip(0,width-1).astype(np.int)
+        #dy = np.around(dy).clip(0,height-1).astype(np.int)
+        dx = dx.clip(0,width-1).astype(np.int)
+        dy = dy.clip(0,height-1).astype(np.int)
         vec[i,dx,dy] = thumb[tx,ty]
-    vec += np.random.randint(noise, size=vec.shape, dtype=vec.dtype)
+    #vec += np.random.randint(noise, size=vec.shape, dtype=vec.dtype)
     return vec
 
 WIDTH = 21
@@ -75,7 +85,7 @@ for cnt,(basename, frame_num, x, y) in enumerate(labels[LABEL]):
 
 # Write background file for use with opencv_createsamples
 negatives = glob.glob(LABEL+'/neg/*.jpg')
-negatives += glob.glob('negs/*.jpg')
+negatives += glob.glob('negs/*.jpg')[:1000]
 f = open('bg.txt','w')
 f.write('\n'.join(negatives))
 f.close()
@@ -105,9 +115,9 @@ if not os.path.exists(OUTDIR):
     num_pos = int(NUM_VECS * .85)
     os.mkdir(OUTDIR)
     train_params = {'NUMPOS':num_pos, 'NUMNEG':num_neg, 'WIDTH':WIDTH, 'HEIGHT':HEIGHT, 'LABEL':LABEL}
-    cmd = 'opencv_traincascade -data {LABEL}/lbp_class_{LABEL} -vec {LABEL}.vec -bg bg.txt -precalcValBufSize 0 -precalcIdxBufSize 0 -numPos {NUMPOS} -numNeg {NUMNEG} -numStages 20 -minHitRate 0.999 -maxfalsealarm 0.5 -w {WIDTH} -h {HEIGHT} -nonsym -baseFormatSave -featureType LBP -acceptanceRatioBreakValue 1e-5'.format(**train_params)
+    cmd = 'opencv_traincascade -data {LABEL}/lbp_class_{LABEL} -vec {LABEL}.vec -bg bg.txt -precalcValBufSize 0 -precalcIdxBufSize 0 -numPos {NUMPOS} -numNeg {NUMNEG} -numStages 14 -minHitRate 0.999 -maxfalsealarm 0.5 -w {WIDTH} -h {HEIGHT} -nonsym -baseFormatSave -featureType LBP -acceptanceRatioBreakValue 1e-5'.format(**train_params)
     print(cmd)
     #import IPython; IPython.embed()
     os.system(cmd)
-os.remove('bg.txt')
-os.remove(vecfile)
+#os.remove('bg.txt')
+#os.remove(vecfile)

@@ -11,8 +11,10 @@ def read_vec(filename, width, height):
     d = []
     for i in range(cnt):
         d.append(np.fromfile(f, dtype='<H', count=size))
-        d.read(1) # gap byte
-    return np.array(d)
+        f.read(1) # gap byte
+    d = np.array(d)
+    d.shape = (cnt, width, height)
+    return d
 
 def save_vec(d, filename):
     assert(d.ndim >= 2)
