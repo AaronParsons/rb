@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import tensorflow as tf; tf.logging.set_verbosity(tf.logging.ERROR)
 from neural import HALF_SZ, IMG_SIZE, x, y_, accuracy, keep_prob, train_step
@@ -104,7 +105,7 @@ def get_batch(files, label_list, label_cnt, non_cnt, half_sz=HALF_SZ):
     has_label = [create_samples(thumb, bgs, num_per, bg_level=255, bg_thresh=150, noise=1, dither=3) for thumb in thumbs]
     has_label = np.concatenate(has_label, axis=0)[:label_cnt]
     non_label = create_nulls(bgs, non_cnt, width=IMG_SIZE, height=IMG_SIZE)
-    np.savez('out.npz', ball=has_label, no_ball=non_label)
+    #np.savez('out.npz', ball=has_label, no_ball=non_label)
     ratio = float(non_cnt) / float(label_cnt)
         #has_label.append(random_permutation(clip))
         #non_label.append(random_permutation(clip))
@@ -144,10 +145,11 @@ def train(savefile, files, label_list, ncycles, nsamples,
         if startfile is not None:
             print('Restoring from', startfile)
             saver.restore(sess, startfile)
-        sess.run(tf.global_variables_initializer())
+        else:
+            sess.run(tf.global_variables_initializer())
         for i in range(ncycles):
             #label_ratio = max(.5 - float(i) / ncycles, 0.15) # XXX
-            label_ratio = .5
+            label_ratio = .15
             label_cnt = int(np.around(label_ratio * nsamples))
             non_cnt = nsamples - label_cnt
             batch_x, batch_y = get_batch(files, label_list, label_cnt, non_cnt, half_sz)

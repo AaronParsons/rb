@@ -1,18 +1,16 @@
 #! /usr/bin/env python
 from __future__ import print_function
 import pylab as plt
-import sys, cv2, numpy as np
-import cPickle, os
-from matplotlib.colors import Normalize
-import matplotlib.patches as patches
-import train, find
+import os, sys, cv2, numpy as np
 import tensorflow as tf
+import train, find
 
 LABEL = 'ball'
 VERSION = 'v001'
 CNN_FILE = '{LABEL}.{VERSION}.ckpl'.format(LABEL=LABEL, VERSION=VERSION)
 
 filename = sys.argv[-1]
+basename = os.path.basename(filename)
 with tf.Session() as session:
     finder = find.FinderCNN(session, CNN_FILE)
     cap = cv2.VideoCapture(filename)
@@ -23,7 +21,7 @@ with tf.Session() as session:
     frame_plt = plt.imshow(frame, cmap='gray')
     centers = np.array(finder.find(frame))
     find_plt = plt.plot(centers[:,0], centers[:,1], 'm+')[0]
-    plt.title('%d/%d' % (frame_num, nframes))
+    plt.title(basename + ' %d/%d' % (frame_num, nframes))
 
     def press(event):
         global frame_num
@@ -35,7 +33,7 @@ with tf.Session() as session:
             centers = np.array(finder.find(frame))
             find_plt.set_xdata(centers[:,0])
             find_plt.set_ydata(centers[:,1])
-            plt.title('%d/%d' % (frame_num, nframes))
+            plt.title(basename + ' %d/%d' % (frame_num, nframes))
             plt.draw()
 
     plt.connect('key_press_event', press)
